@@ -70,9 +70,12 @@ const Server = struct {
             return error.SSLReadError;
         }
 
+        const uri = try std.Uri.parse(&buf);
+        std.debug.print("{s}\n", .{uri.scheme});
+
         // Write bytes to a TLS/SSL connection.
         // Reference: https://docs.openssl.org/master/man3/SSL_write/
-        const response = "HTTP/1.1 200 OK\r\nContent-Length: 13\r\n\r\nHello, World!\n";
+        const response = "20 text/gemini; lang=en; charset=utf-8\r\n\r\nHello from geminiz\n";
         const write_bytes = c.SSL_write(ssl, response.ptr, response.len);
         if (write_bytes <= 0) {
             return error.SSLWriteError;
@@ -120,7 +123,7 @@ const Server = struct {
         }
 
         // Create TCP server
-        const address = try std.net.Address.parseIp("127.0.0.1", 8443);
+        const address = try std.net.Address.parseIp("127.0.0.1", 1965);
         var server = try address.listen(.{ .reuse_address = true });
         defer server.deinit();
 
