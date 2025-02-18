@@ -2,7 +2,7 @@
 
 This is a learning project.
 
-Generate private key `openssl genpkey -algorithm RSA -out key.pem`
+Generate private key `openssl genpkey -algorithm RSA -out key.pem`  
 Generate self-signed cert using private key `openssl req -new -x509 -key key.pem -out cert.pem -days 365`
 
 Build `zig build`
