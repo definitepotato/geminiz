@@ -33,13 +33,6 @@ const Status = enum(usize) {
 const Server = struct {
     const Self = @This();
 
-    // address: []u8,
-    allocator: Allocator,
-
-    pub fn init(allocator: Allocator) Server {
-        return .{ .allocator = allocator };
-    }
-
     pub fn handleConnection(_: Self, ctx: *c.SSL_CTX, conn: std.net.Stream) !void {
         defer conn.close();
 
@@ -137,10 +130,6 @@ const Server = struct {
 };
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
-    const server = Server.init(allocator);
+    const server = Server{};
     try server.listen();
 }
