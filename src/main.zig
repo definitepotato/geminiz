@@ -33,7 +33,13 @@ const Status = enum(usize) {
 const Server = struct {
     const Self = @This();
 
-    pub fn handleConnection(_: Self, ctx: *c.SSL_CTX, conn: std.net.Stream) !void {
+    allocator: Allocator,
+
+    pub fn init(allocator: Allocator) Server {
+        return Server{ .allocator = allocator };
+    }
+
+    pub fn handleConnection(self: Self, ctx: *c.SSL_CTX, conn: std.net.Stream) !void {
         defer conn.close();
 
         // Creates a new SSL structure needed to hold the data for a TLS/SSL connection.
@@ -68,8 +74,10 @@ const Server = struct {
 
         // Write bytes to a TLS/SSL connection.
         // Reference: https://docs.openssl.org/master/man3/SSL_write/
-        const response = "20 text/gemini; lang=en; charset=utf-8\r\n\r\nHello from geminiz\n";
-        const write_bytes = c.SSL_write(ssl, response.ptr, response.len);
+        const response = try std.fmt.allocPrintZ(self.allocator, "{d} text/gemini; lang=en; charset=utf-8\r\n\r\nHello from geminiz\n", .{@intFromEnum(Status.Success)});
+        defer self.allocator.free(response);
+
+        const write_bytes = c.SSL_write(ssl, response.ptr, @intCast(response.len));
         if (write_bytes <= 0) {
             return error.SSLWriteError;
         }
@@ -130,6 +138,10 @@ const Server = struct {
 };
 
 pub fn main() !void {
-    const server = Server{};
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const server = Server.init(allocator);
     try server.listen();
 }
